@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file '/home/dylanpc/Documents/soundboard.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.2
 #
@@ -8,10 +6,11 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QWidget, QVBoxLayout
 
-
-class Ui_Soundboard(object):
+class Ui_Soundboard(QWidget):
     def setupUi(self, Soundboard):
+        """QT-Designer Creation"""
         Soundboard.setObjectName("Soundboard")
         Soundboard.resize(1125, 620)
         Soundboard.setMinimumSize(QtCore.QSize(0, 620))
@@ -55,7 +54,7 @@ class Ui_Soundboard(object):
         self.file_window.setObjectName("file_window")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.file_window)
         self.gridLayout_3.setObjectName("gridLayout_3")
-        self.file_line = QtWidgets.QLineEdit(self.file_window)
+        self.file_line = QtWidgets.QLabel(self.file_window)
         self.file_line.setAlignment(QtCore.Qt.AlignCenter)
         self.file_line.setObjectName("file_line")
         self.gridLayout_3.addWidget(self.file_line, 0, 0, 1, 1)
@@ -109,8 +108,16 @@ class Ui_Soundboard(object):
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.button_window)
         Soundboard.setCentralWidget(self.centralwidget)
 
+        """Personal Addons"""
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents_2)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.verticalLayout.setContentsMargins(2,2,2,2)
+
+
         self.retranslateUi(Soundboard)
         QtCore.QMetaObject.connectSlotsByName(Soundboard)
+
+        self.browse_button.clicked.connect(self.update_file_line)
 
     def retranslateUi(self, Soundboard):
         _translate = QtCore.QCoreApplication.translate
@@ -118,6 +125,38 @@ class Ui_Soundboard(object):
         self.file_line.setText(_translate("Soundboard", "Choose Folder"))
         self.browse_button.setText(_translate("Soundboard", "Browse..."))
         self.label.setText(_translate("Soundboard", "Soundboard Buttons"))
+
+
+    def update_file_selection(self):
+
+        selected_files = self.get_files()
+
+        check_boxes = dict()
+
+        for f_ in selected_files:
+            check_boxes.update({f"{f_}": QtWidgets.QCheckBox(self.scrollAreaWidgetContents_2)})
+            check_boxes[f_].setText(f"{f_}")
+            self.verticalLayout.addWidget(check_boxes[f_])
+
+
+    def get_files(self):
+
+        file_names = QtWidgets.QFileDialog.getOpenFileNames(self, 'Select files',
+                                            '/', "Sound files (*.py *.txt)")
+
+        #splits by file pathing, then extension to get file base
+        selected_files = [f_.split("/")[-1].split(".")[0] for f_ in file_names[0]]
+
+        parent_dir = file_names[0][0].split("/")[-2] + "/"
+
+        self.update_file_line(parent_dir)
+
+        return selected_files
+
+
+    def update_file_line(self, directory):
+        _translate = QtCore.QCoreApplication.translate
+        self.file_line.setText(_translate("Soundboard", directory))
 
 
 if __name__ == "__main__":
