@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file '/home/dylanpc/Documents/soundboard.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.2
 #
@@ -8,9 +10,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 
+
 class Ui_Soundboard(QWidget):
     def setupUi(self, Soundboard):
-        """QT-Designer Creation"""
         Soundboard.setObjectName("Soundboard")
         Soundboard.resize(1125, 620)
         Soundboard.setMinimumSize(QtCore.QSize(0, 620))
@@ -46,7 +48,7 @@ class Ui_Soundboard(QWidget):
         sizePolicy.setHeightForWidth(self.file_window.sizePolicy().hasHeightForWidth())
         self.file_window.setSizePolicy(sizePolicy)
         self.file_window.setMinimumSize(QtCore.QSize(0, 600))
-        self.file_window.setMaximumSize(QtCore.QSize(16777215, 780))
+        self.file_window.setMaximumSize(QtCore.QSize(200, 780))
         self.file_window.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.file_window.setFrameShadow(QtWidgets.QFrame.Raised)
         self.file_window.setLineWidth(3)
@@ -54,22 +56,16 @@ class Ui_Soundboard(QWidget):
         self.file_window.setObjectName("file_window")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.file_window)
         self.gridLayout_3.setObjectName("gridLayout_3")
-        self.file_line = QtWidgets.QLabel(self.file_window)
-        self.file_line.setAlignment(QtCore.Qt.AlignCenter)
-        self.file_line.setObjectName("file_line")
-        self.gridLayout_3.addWidget(self.file_line, 0, 0, 1, 1)
         self.browse_button = QtWidgets.QPushButton(self.file_window)
         self.browse_button.setObjectName("browse_button")
         self.gridLayout_3.addWidget(self.browse_button, 1, 0, 1, 1)
-        self.file_scroll_area = QtWidgets.QScrollArea(self.file_window)
-        self.file_scroll_area.setMinimumSize(QtCore.QSize(0, 0))
-        self.file_scroll_area.setWidgetResizable(True)
-        self.file_scroll_area.setObjectName("file_scroll_area")
-        self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 140, 516))
-        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
-        self.file_scroll_area.setWidget(self.scrollAreaWidgetContents_2)
-        self.gridLayout_3.addWidget(self.file_scroll_area, 2, 0, 1, 1)
+        self.file_line = QtWidgets.QLineEdit(self.file_window)
+        self.file_line.setAlignment(QtCore.Qt.AlignCenter)
+        self.file_line.setObjectName("file_line")
+        self.gridLayout_3.addWidget(self.file_line, 0, 0, 1, 1)
+        self.list_layout = QtWidgets.QListWidget(self.file_window)
+        self.list_layout.setObjectName("list_layout")
+        self.gridLayout_3.addWidget(self.list_layout, 2, 0, 1, 1)
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.file_window)
         self.button_window = QtWidgets.QFrame(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -99,7 +95,7 @@ class Ui_Soundboard(QWidget):
         self.button_scroll_area.setWidgetResizable(True)
         self.button_scroll_area.setObjectName("button_scroll_area")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 917, 555))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 803, 555))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.scrollAreaWidgetContents)
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -108,24 +104,10 @@ class Ui_Soundboard(QWidget):
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.button_window)
         Soundboard.setCentralWidget(self.centralwidget)
 
-        """Personal Addons"""
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents_2)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.verticalLayout.setContentsMargins(2,2,2,2)
-
-
         self.retranslateUi(Soundboard)
         QtCore.QMetaObject.connectSlotsByName(Soundboard)
 
-        self.browse_button.clicked.connect(self.update_file_line)
-
-    def retranslateUi(self, Soundboard):
-        _translate = QtCore.QCoreApplication.translate
-        Soundboard.setWindowTitle(_translate("Soundboard", "Soundboard"))
-        self.file_line.setText(_translate("Soundboard", "Choose Folder"))
-        self.browse_button.setText(_translate("Soundboard", "Browse..."))
-        self.label.setText(_translate("Soundboard", "Soundboard Buttons"))
-
+        self.browse_button.clicked.connect(self.update_file_selection)
 
     def update_file_selection(self):
 
@@ -134,9 +116,10 @@ class Ui_Soundboard(QWidget):
         check_boxes = dict()
 
         for f_ in selected_files:
-            check_boxes.update({f"{f_}": QtWidgets.QCheckBox(self.scrollAreaWidgetContents_2)})
+            check_boxes.update({f"{f_}": QtWidgets.QListWidgetItem()})
             check_boxes[f_].setText(f"{f_}")
-            self.verticalLayout.addWidget(check_boxes[f_])
+            check_boxes[f_].setCheckState(QtCore.Qt.Unchecked)
+            self.list_layout.addItem(check_boxes[f_])
 
 
     def get_files(self):
@@ -144,7 +127,7 @@ class Ui_Soundboard(QWidget):
         file_names = QtWidgets.QFileDialog.getOpenFileNames(self, 'Select files',
                                             '/', "Sound files (*.py *.txt)")
 
-        #splits by file pathing, then extension to get file base
+        # splits by file pathing, then extension to get file base
         selected_files = [f_.split("/")[-1].split(".")[0] for f_ in file_names[0]]
 
         parent_dir = file_names[0][0].split("/")[-2] + "/"
@@ -157,6 +140,14 @@ class Ui_Soundboard(QWidget):
     def update_file_line(self, directory):
         _translate = QtCore.QCoreApplication.translate
         self.file_line.setText(_translate("Soundboard", directory))
+
+
+    def retranslateUi(self, Soundboard):
+        _translate = QtCore.QCoreApplication.translate
+        Soundboard.setWindowTitle(_translate("Soundboard", "Soundboard"))
+        self.browse_button.setText(_translate("Soundboard", "Browse..."))
+        self.file_line.setText(_translate("Soundboard", "Choose Folder"))
+        self.label.setText(_translate("Soundboard", "Soundboard Buttons"))
 
 
 if __name__ == "__main__":
