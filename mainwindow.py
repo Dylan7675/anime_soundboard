@@ -130,6 +130,7 @@ class Ui_Soundboard(QWidget):
         self.list_layout.sortItems()
         self.list_layout.itemClicked.connect(self.create_button_signal)
         self.list_layout.itemClicked.connect(self.remove_button_signal)
+        self.list_layout.itemDoubleClicked.connect(self.double_click_signal)
 
     def create_button_signal(self):
 
@@ -139,6 +140,7 @@ class Ui_Soundboard(QWidget):
                     self.sound_buttons.update({f"{k}": QtWidgets.QPushButton()})
                     self.sound_buttons[k].setText(f"{k}")
                     self.horizontalLayout.addWidget(self.sound_buttons[k])
+                    """To Do: Re-adjust buttons and add signal"""
 
     def remove_button_signal(self):
 
@@ -148,7 +150,18 @@ class Ui_Soundboard(QWidget):
                     self.sound_buttons[k].deleteLater()
                     del self.sound_buttons[k]
 
+    def double_click_signal(self):
+
+        selected_item = self.list_layout.selectedItems()[0]
+
+        if selected_item in self.check_boxes.values():
+            if selected_item.checkState() == QtCore.Qt.Unchecked:
+                selected_item.setCheckState(QtCore.Qt.Checked)
+            else:
+                selected_item.setCheckState(QtCore.Qt.Unchecked)
+
     def remove_all_buttons(self):
+
         for i in range(self.horizontalLayout.count()):
             self.horizontalLayout.itemAt(i).widget().deleteLater()
 
@@ -167,10 +180,12 @@ class Ui_Soundboard(QWidget):
         return selected_files
 
     def update_file_line(self, directory):
+
         _translate = QtCore.QCoreApplication.translate
         self.file_line.setText(_translate("Soundboard", directory))
 
     def retranslateUi(self, Soundboard):
+
         _translate = QtCore.QCoreApplication.translate
         Soundboard.setWindowTitle(_translate("Soundboard", "Soundboard"))
         self.browse_button.setText(_translate("Soundboard", "Browse..."))
