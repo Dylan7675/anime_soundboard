@@ -59,7 +59,7 @@ class Ui_Soundboard(QWidget):
         self.browse_button = QtWidgets.QPushButton(self.file_window)
         self.browse_button.setObjectName("browse_button")
         self.gridLayout_3.addWidget(self.browse_button, 1, 0, 1, 1)
-        self.file_line = QtWidgets.QLineEdit(self.file_window)
+        self.file_line = QtWidgets.QLabel(self.file_window)
         self.file_line.setAlignment(QtCore.Qt.AlignCenter)
         self.file_line.setObjectName("file_line")
         self.gridLayout_3.addWidget(self.file_line, 0, 0, 1, 1)
@@ -109,18 +109,48 @@ class Ui_Soundboard(QWidget):
 
         self.browse_button.clicked.connect(self.update_file_selection)
 
+        self.sound_buttons = {}
+
     def update_file_selection(self):
+
+        self.check_boxes = {}
+
+        self.list_layout.clear()
+
+        self.remove_all_buttons()
 
         selected_files = self.get_files()
 
-        check_boxes = dict()
-
         for f_ in selected_files:
-            check_boxes.update({f"{f_}": QtWidgets.QListWidgetItem()})
-            check_boxes[f_].setText(f"{f_}")
-            check_boxes[f_].setCheckState(QtCore.Qt.Unchecked)
-            self.list_layout.addItem(check_boxes[f_])
+            self.check_boxes.update({f"{f_}": QtWidgets.QListWidgetItem()})
+            self.check_boxes[f_].setText(f"{f_}")
+            self.check_boxes[f_].setCheckState(QtCore.Qt.Unchecked)
+            self.list_layout.addItem(self.check_boxes[f_])
 
+        self.list_layout.sortItems()
+        self.list_layout.itemClicked.connect(self.create_button_signal)
+        self.list_layout.itemClicked.connect(self.remove_button_signal)
+
+    def create_button_signal(self):
+
+        for k in self.check_boxes.keys():
+            if self.check_boxes[k].checkState() == QtCore.Qt.Checked:
+                if k not in self.sound_buttons.keys():
+                    self.sound_buttons.update({f"{k}": QtWidgets.QPushButton()})
+                    self.sound_buttons[k].setText(f"{k}")
+                    self.horizontalLayout.addWidget(self.sound_buttons[k])
+
+    def remove_button_signal(self):
+
+        for k in self.check_boxes.keys():
+            if self.check_boxes[k].checkState() == QtCore.Qt.Unchecked:
+                if k in self.sound_buttons.keys():
+                    self.sound_buttons[k].deleteLater()
+                    del self.sound_buttons[k]
+
+    def remove_all_buttons(self):
+        for i in range(self.horizontalLayout.count()):
+            self.horizontalLayout.itemAt(i).widget().deleteLater()
 
     def get_files(self):
 
@@ -136,11 +166,9 @@ class Ui_Soundboard(QWidget):
 
         return selected_files
 
-
     def update_file_line(self, directory):
         _translate = QtCore.QCoreApplication.translate
         self.file_line.setText(_translate("Soundboard", directory))
-
 
     def retranslateUi(self, Soundboard):
         _translate = QtCore.QCoreApplication.translate
