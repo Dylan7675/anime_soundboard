@@ -9,6 +9,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
+from playsound import playsound
 
 
 class Ui_Soundboard(QWidget):
@@ -97,8 +98,8 @@ class Ui_Soundboard(QWidget):
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 803, 555))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.scrollAreaWidgetContents)
-        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.grid_layout = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.grid_layout.setObjectName("grid_layout")
         self.button_scroll_area.setWidget(self.scrollAreaWidgetContents)
         self.gridLayout.addWidget(self.button_scroll_area, 1, 0, 1, 1)
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.button_window)
@@ -109,15 +110,17 @@ class Ui_Soundboard(QWidget):
 
         self.browse_button.clicked.connect(self.update_file_selection)
 
-        self.sound_buttons = {}
-
     def update_file_selection(self):
 
         self.check_boxes = {}
 
+        self.sound_buttons = {}
+
+        self.sound_signal_tracker = {}
+
         self.list_layout.clear()
 
-        self.remove_all_buttons()
+        self.remove_all_list_items()
 
         selected_files = self.get_files()
 
@@ -139,8 +142,14 @@ class Ui_Soundboard(QWidget):
                 if k not in self.sound_buttons.keys():
                     self.sound_buttons.update({f"{k}": QtWidgets.QPushButton()})
                     self.sound_buttons[k].setText(f"{k}")
-                    self.horizontalLayout.addWidget(self.sound_buttons[k])
+                    self.grid_layout.addWidget(self.sound_buttons[k])
+                    self.sound_buttons[k].setFixedSize(125, 100)
                     """To Do: Re-adjust buttons and add signal"""
+
+        for k in self.sound_buttons.keys():
+            if k not in self.sound_signal_tracker.keys():
+                self.sound_signal_tracker[f"{k}"] = "Created"
+                self.sound_buttons[k].clicked.connect(lambda: playsound(self.parent_path + k))
 
     def remove_button_signal(self):
 
@@ -149,6 +158,7 @@ class Ui_Soundboard(QWidget):
                 if k in self.sound_buttons.keys():
                     self.sound_buttons[k].deleteLater()
                     del self.sound_buttons[k]
+                    del self.sound_signal_tracker[k]
 
     def double_click_signal(self):
 
@@ -160,20 +170,24 @@ class Ui_Soundboard(QWidget):
             else:
                 selected_item.setCheckState(QtCore.Qt.Unchecked)
 
-    def remove_all_buttons(self):
+    def remove_all_list_items(self):
 
-        for i in range(self.horizontalLayout.count()):
-            self.horizontalLayout.itemAt(i).widget().deleteLater()
+        for i in range(self.grid_layout.count()):
+            self.grid_layout.itemAt(i).widget().deleteLater()
 
     def get_files(self):
 
         file_names = QtWidgets.QFileDialog.getOpenFileNames(self, 'Select files',
-                                            '/', "Sound files (*.py *.txt)")
+                    '/', "Sound files (*.wav *.mp3py)")
 
-        # splits by file pathing, then extension to get file base
-        selected_files = [f_.split("/")[-1].split(".")[0] for f_ in file_names[0]]
+        selected_files = [f_.split("/")[-1] for f_ in file_names[0]]
 
-        parent_dir = file_names[0][0].split("/")[-2] + "/"
+        try:
+            parent_dir = file_names[0][0].split("/")[-2] + "/"
+            self.parent_path = '/'.join([folder for folder in file_names[0][0].split("/")[:-1]]) + "/"
+
+        except IndexError:
+            parent_dir = "No Files Selected"
 
         self.update_file_line(parent_dir)
 
@@ -189,7 +203,7 @@ class Ui_Soundboard(QWidget):
         _translate = QtCore.QCoreApplication.translate
         Soundboard.setWindowTitle(_translate("Soundboard", "Soundboard"))
         self.browse_button.setText(_translate("Soundboard", "Browse..."))
-        self.file_line.setText(_translate("Soundboard", "Choose Folder"))
+        self.file_line.setText(_translate("Soundboard", "Choose Files"))
         self.label.setText(_translate("Soundboard", "Soundboard Buttons"))
 
 
