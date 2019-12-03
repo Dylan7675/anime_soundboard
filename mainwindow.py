@@ -98,8 +98,7 @@ class Ui_Soundboard(QWidget):
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 803, 555))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
-        self.grid_layout = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
-        self.grid_layout.setObjectName("grid_layout")
+        self.button_v_layout = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.button_scroll_area.setWidget(self.scrollAreaWidgetContents)
         self.gridLayout.addWidget(self.button_scroll_area, 1, 0, 1, 1)
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.button_window)
@@ -109,6 +108,8 @@ class Ui_Soundboard(QWidget):
         QtCore.QMetaObject.connectSlotsByName(Soundboard)
 
         self.browse_button.clicked.connect(self.update_file_selection)
+
+        self.horizontal_layout_list = []
 
     def update_file_selection(self):
 
@@ -142,9 +143,8 @@ class Ui_Soundboard(QWidget):
                 if k not in self.sound_buttons.keys():
                     self.sound_buttons.update({f"{k}": QtWidgets.QPushButton()})
                     self.sound_buttons[k].setText(f"{k}")
-                    self.grid_layout.addWidget(self.sound_buttons[k])
                     self.sound_buttons[k].setFixedSize(125, 100)
-                    """To Do: Re-adjust buttons and add signal"""
+                    self.create_h_layouts(k)
 
         for k in self.sound_buttons.keys():
             if k not in self.sound_signal_tracker.keys():
@@ -159,6 +159,7 @@ class Ui_Soundboard(QWidget):
                     self.sound_buttons[k].deleteLater()
                     del self.sound_buttons[k]
                     del self.sound_signal_tracker[k]
+                    self.shift_buttons()
 
     def double_click_signal(self):
 
@@ -170,10 +171,34 @@ class Ui_Soundboard(QWidget):
             else:
                 selected_item.setCheckState(QtCore.Qt.Unchecked)
 
+    def create_h_layouts(self, key):
+
+        if not self.horizontal_layout_list:
+            self.horizontal_layout_list.append(QtWidgets.QHBoxLayout())
+            self.button_v_layout.addLayout(self.horizontal_layout_list[-1])
+
+        if self.horizontal_layout_list[-1].count() <= 3:
+            self.horizontal_layout_list[-1].addWidget(self.sound_buttons[key])
+        else:
+            self.horizontal_layout_list.append(QtWidgets.QHBoxLayout())
+            self.button_v_layout.addLayout(self.horizontal_layout_list[-1])
+            self.horizontal_layout_list[-1].addWidget(self.sound_buttons[key])
+
+    def shift_buttons(self):
+
+        for index,layout in enumerate(self.horizontal_layout_list, 0):
+            if layout.count() < 5 and index != len(self.horizontal_layout_list) - 1:
+                move_button = self.horizontal_layout_list[index + 1].itemAt(0).widget()
+                layout.addWidget(move_button)
+            if layout.count() == 0:
+                del self.horizontal_layout_list[index]
+
     def remove_all_list_items(self):
 
-        for i in range(self.grid_layout.count()):
-            self.grid_layout.itemAt(i).widget().deleteLater()
+        for index, layout in enumerate(self.horizontal_layout_list, 0):
+            for item in range(layout.count()):
+                self.horizontal_layout_list[index].itemAt(item).widget().deleteLater()
+        self.horizontal_layout_list = []
 
     def get_files(self):
 
