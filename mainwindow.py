@@ -10,14 +10,16 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from playsound import playsound
+import sip
+
 
 
 class Ui_Soundboard(QWidget):
     def setupUi(self, Soundboard):
         Soundboard.setObjectName("Soundboard")
         Soundboard.resize(1125, 620)
-        Soundboard.setMinimumSize(QtCore.QSize(0, 620))
-        Soundboard.setMaximumSize(QtCore.QSize(16777215, 620))
+        Soundboard.setMinimumSize(QtCore.QSize(0, 640))
+        Soundboard.setMaximumSize(QtCore.QSize(16777215, 640))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(255, 255, 255))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -104,6 +106,31 @@ class Ui_Soundboard(QWidget):
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.button_window)
         Soundboard.setCentralWidget(self.centralwidget)
 
+        # Menu Options
+        self.menu = Soundboard.menuBar()
+        self.options = self.menu.addMenu("Options")
+
+        """
+        self.color_picker = self.options.addMenu("Color Picker")
+        self.font_color_picker = QtWidgets.QAction("Font Color", self)
+        self.button_color_picker = QtWidgets.QAction("Button Color", self)
+        self.bg_color_picker = QtWidgets.QAction("Background Color", self)
+
+        self.color_picker.addAction(self.font_color_picker)
+        self.color_picker.addAction(self.button_color_picker)
+        self.color_picker.addAction(self.bg_color_picker)
+        """
+
+        self.exit = QtWidgets.QAction("Exit", self)
+        self.exit.setShortcut("Ctrl+X")
+        self.options.addAction(self.exit)
+
+        # Menu Triggers
+        """"self.font_color_picker.triggered.connect(self.font_color_picker_signal)
+        self.button_color_picker.triggered.connect(self.color_picker_signal)
+        self.bg_color_picker.triggered.connect(self.bg_color_picker_signal)"""
+        self.exit.triggered.connect(Soundboard.close)
+
         self.retranslateUi(Soundboard)
         QtCore.QMetaObject.connectSlotsByName(Soundboard)
 
@@ -134,15 +161,23 @@ class Ui_Soundboard(QWidget):
         self.list_layout.sortItems()
         self.list_layout.itemClicked.connect(self.create_button_signal)
         self.list_layout.itemClicked.connect(self.remove_button_signal)
-        self.list_layout.itemDoubleClicked.connect(self.double_click_signal)
 
     def create_button_signal(self):
+
+        selected_item = self.list_layout.selectedItems()[0]
+
+        if selected_item in self.check_boxes.values():
+            if selected_item.checkState() == QtCore.Qt.Unchecked:
+                selected_item.setCheckState(QtCore.Qt.Checked)
+            else:
+                selected_item.setCheckState(QtCore.Qt.Unchecked)
 
         for k in self.check_boxes.keys():
             if self.check_boxes[k].checkState() == QtCore.Qt.Checked:
                 if k not in self.sound_buttons.keys():
                     self.sound_buttons.update({f"{k}": QtWidgets.QPushButton()})
                     self.sound_buttons[k].setText(f"{k}")
+                    self.sound_buttons[k].setStyleSheet("background-color: #3746ee; color: white;")
                     self.sound_buttons[k].setFixedSize(125, 100)
                     self.create_h_layouts(k)
 
@@ -156,20 +191,27 @@ class Ui_Soundboard(QWidget):
         for k in self.check_boxes.keys():
             if self.check_boxes[k].checkState() == QtCore.Qt.Unchecked:
                 if k in self.sound_buttons.keys():
-                    self.sound_buttons[k].deleteLater()
+                    sip.delete(self.sound_buttons[k])
                     del self.sound_buttons[k]
                     del self.sound_signal_tracker[k]
                     self.shift_buttons()
 
-    def double_click_signal(self):
+    """
+    def color_picker_signal(self):
+        color = QtWidgets.QColorDialog.getColor()
+        return str(color.name())
 
-        selected_item = self.list_layout.selectedItems()[0]
+    def bg_color_picker_signal(self):
+        color = QtWidgets.QColorDialog.getColor()
+        Soundboard.setStyleSheet("QMainWindow { background-color: %s}" % color.name())
+        self.list_layout.setStyleSheet("QWidget { background-color: %s}" % color.name())
+        self.button_scroll_area.setStyleSheet("QWidget { background-color: %s}" % color.name())
 
-        if selected_item in self.check_boxes.values():
-            if selected_item.checkState() == QtCore.Qt.Unchecked:
-                selected_item.setCheckState(QtCore.Qt.Checked)
-            else:
-                selected_item.setCheckState(QtCore.Qt.Unchecked)
+    def font_color_picker_signal(self):
+        color = QtWidgets.QColorDialog.getColor()
+        self.file_line.setStyleSheet("QWidget { color: %s}" % color.name())
+        self.browse_button.setStyleSheet("QWidget { color: %s}" % color.name())
+    """
 
     def create_h_layouts(self, key):
 
@@ -187,8 +229,9 @@ class Ui_Soundboard(QWidget):
     def shift_buttons(self):
 
         for index,layout in enumerate(self.horizontal_layout_list, 0):
-            if layout.count() < 5 and index != len(self.horizontal_layout_list) - 1:
-                move_button = self.horizontal_layout_list[index + 1].itemAt(0).widget()
+
+            if layout.count() < 4 and index + 1 < len(self.horizontal_layout_list):
+                move_button = self.horizontal_layout_list[index+1].itemAt(0).widget()
                 layout.addWidget(move_button)
             if layout.count() == 0:
                 del self.horizontal_layout_list[index]
@@ -203,7 +246,7 @@ class Ui_Soundboard(QWidget):
     def get_files(self):
 
         file_names = QtWidgets.QFileDialog.getOpenFileNames(self, 'Select files',
-                    '/', "Sound files (*.wav *.mp3py)")
+                    '/', "Sound files (*.wav *.mp3)")
 
         selected_files = [f_.split("/")[-1] for f_ in file_names[0]]
 
