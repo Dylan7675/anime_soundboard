@@ -11,8 +11,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from playsound import playsound
 import sip
-
-
+from pathlib import Path
+import os.path
 
 class Ui_Soundboard(QWidget):
     def setupUi(self, Soundboard):
@@ -184,7 +184,7 @@ class Ui_Soundboard(QWidget):
         for k in self.sound_buttons.keys():
             if k not in self.sound_signal_tracker.keys():
                 self.sound_signal_tracker[f"{k}"] = "Created"
-                self.sound_buttons[k].clicked.connect(lambda: playsound(self.parent_path + k))
+                self.sound_buttons[k].clicked.connect(lambda: playsound(os.path.join(str(self.parent_path),k)))
 
     def remove_button_signal(self):
 
@@ -252,7 +252,7 @@ class Ui_Soundboard(QWidget):
 
         try:
             parent_dir = file_names[0][0].split("/")[-2] + "/"
-            self.parent_path = '/'.join([folder for folder in file_names[0][0].split("/")[:-1]]) + "/"
+            self.parent_path = Path('/'.join([folder for folder in file_names[0][0].split("/")[:-1]]) + "/")
 
         except IndexError:
             parent_dir = "No Files Selected"
