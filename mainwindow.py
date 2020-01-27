@@ -166,12 +166,6 @@ class Ui_Soundboard(QWidget):
 
         selected_item = self.list_layout.selectedItems()[0]
 
-        if selected_item in self.check_boxes.values():
-            if selected_item.checkState() == QtCore.Qt.Unchecked:
-                selected_item.setCheckState(QtCore.Qt.Checked)
-            else:
-                selected_item.setCheckState(QtCore.Qt.Unchecked)
-
         for k in self.check_boxes.keys():
             if self.check_boxes[k].checkState() == QtCore.Qt.Checked:
                 if k not in self.sound_buttons.keys():
