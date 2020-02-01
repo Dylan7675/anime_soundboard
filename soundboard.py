@@ -13,6 +13,7 @@ from playsound import playsound
 import sip
 from pathlib import Path
 import os.path
+import time
 
 class Ui_Soundboard(QWidget):
     def setupUi(self, Soundboard):
@@ -164,7 +165,7 @@ class Ui_Soundboard(QWidget):
 
     def create_button_signal(self):
 
-        selected_item = self.list_layout.selectedItems()[0]
+        selected_item = self.list_layout.selectedItems()
 
         for k in self.check_boxes.keys():
             if self.check_boxes[k].checkState() == QtCore.Qt.Checked:
