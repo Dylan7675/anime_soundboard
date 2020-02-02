@@ -162,6 +162,7 @@ class Ui_Soundboard(QWidget):
         self.list_layout.itemClicked.connect(self.create_button_signal)
         self.list_layout.itemClicked.connect(self.remove_button_signal)
 
+
     def create_button_signal(self):
 
         selected_item = self.list_layout.selectedItems()[0]
