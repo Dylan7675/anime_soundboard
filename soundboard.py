@@ -13,7 +13,9 @@ from playsound import playsound
 import sip
 from pathlib import Path
 import os.path
-import time
+import json
+import glob
+from collections import OrderedDict
 
 class Ui_Soundboard(QWidget):
     def setupUi(self, Soundboard):
@@ -107,20 +109,33 @@ class Ui_Soundboard(QWidget):
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.button_window)
         Soundboard.setCentralWidget(self.centralwidget)
 
+        # System Config
+        #try:
+        #    self.config_path = Path("%PROGRAMDATA%\soundboard\config\profiles")
+        #except ValueError:
+        #    os.mkdir("%PROGRAMDATA%\soundboard\config\profiles")
+
+        #try:
+        #    os.makedirs("/etc/soundboard/config/profiles", 777)
+        #    print(self.config_path)
+        #except ValueError:
+        #    os.makedirs("/etc/soundboard/config/profiles", 777)
+
+        # Initializing variables
+        self.horizontal_layout_list = []
+
+        # refer all available .json files
+        self.all_profiles = {}
+
         # Menu Options
         self.menu = Soundboard.menuBar()
         self.options = self.menu.addMenu("Options")
 
-        """
-        self.color_picker = self.options.addMenu("Color Picker")
-        self.font_color_picker = QtWidgets.QAction("Font Color", self)
-        self.button_color_picker = QtWidgets.QAction("Button Color", self)
-        self.bg_color_picker = QtWidgets.QAction("Background Color", self)
+        self.save_profile_option = QtWidgets.QAction("Save Profile", self)
+        self.save_profile_option.setShortcut("Ctrl+S")
+        self.options.addAction(self.save_profile_option)
 
-        self.color_picker.addAction(self.font_color_picker)
-        self.color_picker.addAction(self.button_color_picker)
-        self.color_picker.addAction(self.bg_color_picker)
-        """
+        self.load_profile_option = self.options.addMenu("Load Profile")
 
         self.exit = QtWidgets.QAction("Exit", self)
         self.exit.setShortcut("Ctrl+X")
@@ -130,14 +145,16 @@ class Ui_Soundboard(QWidget):
         """"self.font_color_picker.triggered.connect(self.font_color_picker_signal)
         self.button_color_picker.triggered.connect(self.color_picker_signal)
         self.bg_color_picker.triggered.connect(self.bg_color_picker_signal)"""
+
+        self.save_profile_option.triggered.connect(self.save_profile)
+
         self.exit.triggered.connect(Soundboard.close)
+
+        self.browse_button.clicked.connect(self.update_file_selection)
 
         self.retranslateUi(Soundboard)
         QtCore.QMetaObject.connectSlotsByName(Soundboard)
 
-        self.browse_button.clicked.connect(self.update_file_selection)
-
-        self.horizontal_layout_list = []
 
     def update_file_selection(self):
 
@@ -162,7 +179,6 @@ class Ui_Soundboard(QWidget):
         self.list_layout.sortItems()
         self.list_layout.itemClicked.connect(self.create_button_signal)
         self.list_layout.itemClicked.connect(self.remove_button_signal)
-
 
     def create_button_signal(self):
 
@@ -191,23 +207,6 @@ class Ui_Soundboard(QWidget):
                     del self.sound_buttons[k]
                     del self.sound_signal_tracker[k]
                     self.shift_buttons()
-
-    """
-    def color_picker_signal(self):
-        color = QtWidgets.QColorDialog.getColor()
-        return str(color.name())
-
-    def bg_color_picker_signal(self):
-        color = QtWidgets.QColorDialog.getColor()
-        Soundboard.setStyleSheet("QMainWindow { background-color: %s}" % color.name())
-        self.list_layout.setStyleSheet("QWidget { background-color: %s}" % color.name())
-        self.button_scroll_area.setStyleSheet("QWidget { background-color: %s}" % color.name())
-
-    def font_color_picker_signal(self):
-        color = QtWidgets.QColorDialog.getColor()
-        self.file_line.setStyleSheet("QWidget { color: %s}" % color.name())
-        self.browse_button.setStyleSheet("QWidget { color: %s}" % color.name())
-    """
 
     def create_h_layouts(self, key):
 
@@ -261,6 +260,31 @@ class Ui_Soundboard(QWidget):
 
         _translate = QtCore.QCoreApplication.translate
         self.file_line.setText(_translate("Soundboard", directory))
+
+    def save_profile(self):
+
+        confirm = QtWidgets.QMessageBox()
+        confirm.setIcon(QtWidgets.QMessageBox.Question)
+        confirm.setText("Would you like to save these buttons as a profile?")
+        confirm.setWindowTitle("Save Profile?")
+        confirm.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        retval = confirm.exec_()
+
+        if retval == QtWidgets.QMessageBox.Yes:
+            profile_name, ok = QtWidgets.QInputDialog.getText(self, "Profile Name?", "What would you like to name the profile?")
+
+            if profile_name != "":
+                new_profile_dic = OrderedDict()
+                new_profile_dic['Name'] = profile_name
+                new_profile_dic['Files'] = []
+                for k in self.sound_buttons.keys():
+                    files = str(Path("/".join([str(self.parent_path), self.sound_buttons[k].text()])))
+                    new_profile_dic['Files'].append(files)
+                    with open(f'{new_profile_dic["Name"]}.json', 'w') as json_file:
+                        json.dump(new_profile_dic, json_file)
+
+    def load_profile(self):
+        print("write function")
 
     def retranslateUi(self, Soundboard):
 
