@@ -1,12 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file '/home/dylanpc/Documents/soundboard.ui'
-#
-# Created by: PyQt5 UI code generator 5.13.2
-#
-# WARNING! All changes made in this file will be lost!
-
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from playsound import playsound
@@ -125,7 +116,7 @@ class Ui_Soundboard(QWidget):
         self.horizontal_layout_list = []
 
         # refer all available .json files
-        self.all_profiles = {}
+        self.all_profiles = []
 
         # Menu Options
         self.menu = Soundboard.menuBar()
@@ -145,6 +136,8 @@ class Ui_Soundboard(QWidget):
         """"self.font_color_picker.triggered.connect(self.font_color_picker_signal)
         self.button_color_picker.triggered.connect(self.color_picker_signal)
         self.bg_color_picker.triggered.connect(self.bg_color_picker_signal)"""
+
+        self.load_profile_menu()
 
         self.save_profile_option.triggered.connect(self.save_profile)
 
@@ -277,14 +270,35 @@ class Ui_Soundboard(QWidget):
                 new_profile_dic = OrderedDict()
                 new_profile_dic['Name'] = profile_name
                 new_profile_dic['Files'] = []
-                for k in self.sound_buttons.keys():
-                    files = str(Path("/".join([str(self.parent_path), self.sound_buttons[k].text()])))
-                    new_profile_dic['Files'].append(files)
-                    with open(f'{new_profile_dic["Name"]}.json', 'w') as json_file:
-                        json.dump(new_profile_dic, json_file)
+                try:
+                    for k in self.sound_buttons.keys():
+                        files = str(Path("/".join([str(self.parent_path), self.sound_buttons[k].text()])))
+                        new_profile_dic['Files'].append(files)
+                        with open(f'{new_profile_dic["Name"]}.json', 'w') as json_file:
+                            json.dump(new_profile_dic, json_file)
+                    self.load_profile_menu()
+                except AttributeError:
+                    null_save_message = QtWidgets.QMessageBox()
+                    null_save_message.setIcon(QtWidgets.QMessageBox.Warning)
+                    null_save_message.setText("You cannot save a profile without selecting buttons")
+                    null_save_message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    null_save_message.exec()
+
+    def save_recent_profile(self):
+        print("write fuction to save a Most Recent profile per button selection")
+
+    def load_profile_menu(self):
+
+        for file in glob.glob('*.json'):
+            profile_name = file.split(".")[0]
+            if profile_name not in self.all_profiles:
+                self.all_profiles.append(profile_name)
+                profile_menu_item = QtWidgets.QAction(profile_name, self)
+                profile_menu_item.triggered.connect(self.load_profile)
+                self.load_profile_option.addAction(profile_menu_item)
 
     def load_profile(self):
-        print("write function")
+        print("write profile loader")
 
     def retranslateUi(self, Soundboard):
 
