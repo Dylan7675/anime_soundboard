@@ -117,6 +117,7 @@ class Ui_Soundboard(QWidget):
 
         # refer all available .json files
         self.all_profiles = []
+        self.recent_profile_dic = {'Name': 'Most Recent', 'Files': []}
 
         # Menu Options
         self.menu = Soundboard.menuBar()
@@ -190,6 +191,7 @@ class Ui_Soundboard(QWidget):
             if k not in self.sound_signal_tracker.keys():
                 self.sound_signal_tracker[f"{k}"] = "Created"
                 self.sound_buttons[k].clicked.connect(lambda: playsound(os.path.join(str(self.parent_path),k)))
+                self.save_recent_profile()
 
     def remove_button_signal(self):
 
@@ -200,6 +202,7 @@ class Ui_Soundboard(QWidget):
                     del self.sound_buttons[k]
                     del self.sound_signal_tracker[k]
                     self.shift_buttons()
+        self.save_recent_profile()
 
     def create_h_layouts(self, key):
 
@@ -267,15 +270,9 @@ class Ui_Soundboard(QWidget):
             profile_name, ok = QtWidgets.QInputDialog.getText(self, "Profile Name?", "What would you like to name the profile?")
 
             if profile_name != "":
-                new_profile_dic = OrderedDict()
-                new_profile_dic['Name'] = profile_name
-                new_profile_dic['Files'] = []
+                new_profile_dic = OrderedDict(Name=profile_name, Files=[])
                 try:
-                    for k in self.sound_buttons.keys():
-                        files = str(Path("/".join([str(self.parent_path), self.sound_buttons[k].text()])))
-                        new_profile_dic['Files'].append(files)
-                        with open(f'{new_profile_dic["Name"]}.json', 'w') as json_file:
-                            json.dump(new_profile_dic, json_file)
+                    self.save_json_creation(new_profile_dic)
                     self.load_profile_menu()
                 except AttributeError:
                     null_save_message = QtWidgets.QMessageBox()
@@ -285,11 +282,27 @@ class Ui_Soundboard(QWidget):
                     null_save_message.exec()
 
     def save_recent_profile(self):
-        print("write fuction to save a Most Recent profile per button selection")
+
+        try:
+            self.save_json_creation(self.recent_profile_dic)
+        except AttributeError:
+            print("No buttons currently selected")
+
+    def save_json_creation(self, dic):
+
+        # Clearing Most Recent Profile Files
+        dic['Files'] = []
+
+        for k in self.sound_buttons.keys():
+            files = str(Path("/".join([str(self.parent_path), self.sound_buttons[k].text()])))
+            if files not in dic['Files']:
+                dic['Files'].append(files)
+        with open(f'{dic["Name"]}.json', 'w') as json_file:
+            json.dump(dic, json_file)
 
     def load_profile_menu(self):
 
-        for file in glob.glob('*.json'):
+        for file in sorted(glob.glob('*.json')):
             profile_name = file.split(".")[0]
             if profile_name not in self.all_profiles:
                 self.all_profiles.append(profile_name)
