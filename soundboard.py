@@ -114,6 +114,9 @@ class Ui_Soundboard(QWidget):
 
         # Initializing variables
         self.horizontal_layout_list = []
+        self.check_boxes = {}
+        self.sound_buttons = {}
+        self.sound_signal_tracker = {}
 
         # refer all available .json files
         self.all_profiles = []
@@ -149,22 +152,21 @@ class Ui_Soundboard(QWidget):
         self.retranslateUi(Soundboard)
         QtCore.QMetaObject.connectSlotsByName(Soundboard)
 
-
     def update_file_selection(self):
 
         self.check_boxes = {}
-
         self.sound_buttons = {}
-
         self.sound_signal_tracker = {}
 
         self.list_layout.clear()
-
         self.remove_all_list_items()
 
         selected_files = self.get_files()
+        self.load_selection_menu(selected_files)
 
-        for f_ in selected_files:
+    def load_selection_menu(self, files):
+
+        for f_ in files:
             self.check_boxes.update({f"{f_}": QtWidgets.QListWidgetItem()})
             self.check_boxes[f_].setText(f"{f_}")
             self.check_boxes[f_].setCheckState(QtCore.Qt.Unchecked)
@@ -184,14 +186,13 @@ class Ui_Soundboard(QWidget):
                     self.sound_buttons.update({f"{k}": QtWidgets.QPushButton()})
                     self.sound_buttons[k].setText(f"{k}")
                     self.sound_buttons[k].setStyleSheet("background-color: #3746ee; color: white;")
-                    self.sound_buttons[k].setFixedSize(125, 100)
+                    self.sound_buttons[k].setFixedSize(150, 125)
                     self.create_h_layouts(k)
 
         for k in self.sound_buttons.keys():
             if k not in self.sound_signal_tracker.keys():
                 self.sound_signal_tracker[f"{k}"] = "Created"
                 self.sound_buttons[k].clicked.connect(lambda: playsound(os.path.join(str(self.parent_path),k)))
-                self.save_recent_profile()
 
     def remove_button_signal(self):
 
@@ -202,7 +203,6 @@ class Ui_Soundboard(QWidget):
                     del self.sound_buttons[k]
                     del self.sound_signal_tracker[k]
                     self.shift_buttons()
-        self.save_recent_profile()
 
     def create_h_layouts(self, key):
 
@@ -281,12 +281,6 @@ class Ui_Soundboard(QWidget):
                     null_save_message.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     null_save_message.exec()
 
-    def save_recent_profile(self):
-
-        try:
-            self.save_json_creation(self.recent_profile_dic)
-        except AttributeError:
-            print("No buttons currently selected")
 
     def save_json_creation(self, dic):
 
@@ -307,11 +301,36 @@ class Ui_Soundboard(QWidget):
             if profile_name not in self.all_profiles:
                 self.all_profiles.append(profile_name)
                 profile_menu_item = QtWidgets.QAction(profile_name, self)
-                profile_menu_item.triggered.connect(self.load_profile)
                 self.load_profile_option.addAction(profile_menu_item)
+                profile_menu_item.triggered.connect(lambda state, profile=profile_name: self.load_profile(profile))
 
-    def load_profile(self):
-        print("write profile loader")
+    def load_profile(self, profile):
+
+        for k in self.check_boxes.keys():
+            self.check_boxes[k].setCheckState(QtCore.Qt.Unchecked)
+        self.remove_button_signal()
+        self.check_boxes = {}
+
+        with open(f'{profile}.json', 'r') as file:
+            json_unpack = json.load(file)
+        button_file_paths = json_unpack['Files']
+
+        selected_files = [f_.split("/")[-1] for f_ in button_file_paths]
+
+        try:
+            self.parent_path = Path('/'.join([folder for folder in button_file_paths[0].split("/")[:-1]]) + "/")
+            self.update_file_line(str(self.parent_path))
+        except IndexError:
+            self.update_file_line("No Recent Selection")
+
+        self.remove_all_list_items()
+        self.list_layout.clear()
+
+        self.load_selection_menu(selected_files)
+
+        for k in self.check_boxes.keys():
+            self.check_boxes[k].setCheckState(QtCore.Qt.Checked)
+            self.create_button_signal()
 
     def retranslateUi(self, Soundboard):
 
