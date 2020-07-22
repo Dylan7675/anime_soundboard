@@ -100,17 +100,21 @@ class Ui_Soundboard(QWidget):
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.button_window)
         Soundboard.setCentralWidget(self.centralwidget)
 
+        self.config_path = Path.home() / ".soundboard" / "profiles"
+
         # System Config
         #try:
         #    self.config_path = Path("%PROGRAMDATA%\soundboard\config\profiles")
         #except ValueError:
         #    os.mkdir("%PROGRAMDATA%\soundboard\config\profiles")
 
-        #try:
-        #    os.makedirs("/etc/soundboard/config/profiles", 777)
-        #    print(self.config_path)
-        #except ValueError:
-        #    os.makedirs("/etc/soundboard/config/profiles", 777)
+
+        if not os.path.exists(self.config_path):
+            try:
+                os.makedirs(self.config_path, 0o700)
+                print(self.config_path)
+            except ValueError:
+                print(ValueError)
 
         # Initializing variables
         self.horizontal_layout_list = []
@@ -284,18 +288,17 @@ class Ui_Soundboard(QWidget):
 
     def save_json_creation(self, dic):
 
-        # Clearing Most Recent Profile Files
-        dic['Files'] = []
-
         for k in self.sound_buttons.keys():
             files = str(Path("/".join([str(self.parent_path), self.sound_buttons[k].text()])))
             if files not in dic['Files']:
                 dic['Files'].append(files)
+        os.chdir(self.config_path)
         with open(f'{dic["Name"]}.json', 'w') as json_file:
             json.dump(dic, json_file)
 
     def load_profile_menu(self):
 
+        os.chdir(self.config_path)
         for file in sorted(glob.glob('*.json')):
             profile_name = file.split(".")[0]
             if profile_name not in self.all_profiles:
