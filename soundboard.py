@@ -247,8 +247,7 @@ class Ui_Soundboard(QWidget):
 
         try:
             parent_dir = Path(file_names[0][0]).parent
-            self.parent_path = Path('/'.join([folder for folder in file_names[0][0].split("/")[:-1]]) + "/")
-            #self.parent_path = Path(file_names[0][0]).parent
+            self.parent_path = Path(file_names[0][0]).parent
 
         except IndexError:
             parent_dir = "No Files Selected"
