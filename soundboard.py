@@ -246,13 +246,14 @@ class Ui_Soundboard(QWidget):
         selected_files = [f_.split("/")[-1] for f_ in file_names[0]]
 
         try:
-            parent_dir = file_names[0][0].split("/")[-2] + "/"
+            parent_dir = Path(file_names[0][0]).parent
             self.parent_path = Path('/'.join([folder for folder in file_names[0][0].split("/")[:-1]]) + "/")
+            #self.parent_path = Path(file_names[0][0]).parent
 
         except IndexError:
             parent_dir = "No Files Selected"
 
-        self.update_file_line(parent_dir)
+        self.update_file_line(str(parent_dir))
 
         return selected_files
 
@@ -316,12 +317,11 @@ class Ui_Soundboard(QWidget):
 
         with open(f'{profile}.json', 'r') as file:
             json_unpack = json.load(file)
-        button_file_paths = json_unpack['Files']
 
-        selected_files = [f_.split("/")[-1] for f_ in button_file_paths]
+        selected_files = [ Path(file).parts[-1] for file in json_unpack['Files']]
 
         try:
-            self.parent_path = Path('/'.join([folder for folder in button_file_paths[0].split("/")[:-1]]) + "/")
+            self.parent_path = Path(json_unpack['Files'][0]).parent
             self.update_file_line(str(self.parent_path))
         except IndexError:
             self.update_file_line("No Recent Selection")
