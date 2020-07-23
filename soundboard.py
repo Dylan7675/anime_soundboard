@@ -100,14 +100,8 @@ class Ui_Soundboard(QWidget):
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.button_window)
         Soundboard.setCentralWidget(self.centralwidget)
 
+        # Setting config path for button profiles
         self.config_path = Path.home() / ".soundboard" / "profiles"
-
-        # System Config
-        #try:
-        #    self.config_path = Path("%PROGRAMDATA%\soundboard\config\profiles")
-        #except ValueError:
-        #    os.mkdir("%PROGRAMDATA%\soundboard\config\profiles")
-
 
         if not os.path.exists(self.config_path):
             try:
@@ -140,17 +134,13 @@ class Ui_Soundboard(QWidget):
         self.exit.setShortcut("Ctrl+X")
         self.options.addAction(self.exit)
 
-        # Menu Triggers
-        """"self.font_color_picker.triggered.connect(self.font_color_picker_signal)
-        self.button_color_picker.triggered.connect(self.color_picker_signal)
-        self.bg_color_picker.triggered.connect(self.bg_color_picker_signal)"""
-
         self.load_profile_menu()
 
         self.save_profile_option.triggered.connect(self.save_profile)
 
         self.exit.triggered.connect(Soundboard.close)
 
+        # Enables browse and select files workflow
         self.browse_button.clicked.connect(self.update_file_selection)
 
         self.retranslateUi(Soundboard)
@@ -158,6 +148,7 @@ class Ui_Soundboard(QWidget):
 
     def update_file_selection(self):
 
+        # Clear button selections
         self.check_boxes = {}
         self.sound_buttons = {}
         self.sound_signal_tracker = {}
@@ -165,10 +156,13 @@ class Ui_Soundboard(QWidget):
         self.list_layout.clear()
         self.remove_all_list_items()
 
+        # Select files and load selection menu
         selected_files = self.get_files()
         self.load_selection_menu(selected_files)
 
     def load_selection_menu(self, files):
+
+        """Loads selected files into the menu on the left panel"""
 
         for f_ in files:
             self.check_boxes.update({f"{f_}": QtWidgets.QListWidgetItem()})
@@ -182,7 +176,7 @@ class Ui_Soundboard(QWidget):
 
     def create_button_signal(self):
 
-        selected_item = self.list_layout.selectedItems()
+        """Creates the button after the item is selected from the selection menu"""
 
         for k in self.check_boxes.keys():
             if self.check_boxes[k].checkState() == QtCore.Qt.Checked:
@@ -200,6 +194,8 @@ class Ui_Soundboard(QWidget):
 
     def remove_button_signal(self):
 
+        """Removes the button after the item is deselected from the selection menu"""
+
         for k in self.check_boxes.keys():
             if self.check_boxes[k].checkState() == QtCore.Qt.Unchecked:
                 if k in self.sound_buttons.keys():
@@ -209,6 +205,9 @@ class Ui_Soundboard(QWidget):
                     self.shift_buttons()
 
     def create_h_layouts(self, key):
+
+        """Creates a HorizontalBoxLayout for buttons to fill into.
+            Once there are 4 buttons per row, a new layout is added"""
 
         if not self.horizontal_layout_list:
             self.horizontal_layout_list.append(QtWidgets.QHBoxLayout())
@@ -223,6 +222,10 @@ class Ui_Soundboard(QWidget):
 
     def shift_buttons(self):
 
+        """Shifts buttons to maintain at maximum 4 buttons per row.
+            Shifting buttons will always maintain the upper most rows
+            move buttons in order."""
+
         for index,layout in enumerate(self.horizontal_layout_list, 0):
 
             if layout.count() < 4 and index + 1 < len(self.horizontal_layout_list):
@@ -233,12 +236,17 @@ class Ui_Soundboard(QWidget):
 
     def remove_all_list_items(self):
 
+        """Deletes all buttons in the panel"""
+
         for index, layout in enumerate(self.horizontal_layout_list, 0):
             for item in range(layout.count()):
                 self.horizontal_layout_list[index].itemAt(item).widget().deleteLater()
         self.horizontal_layout_list = []
 
     def get_files(self):
+
+        """File browser to select MP3/WAV files. This is used to
+           create the file selecetion menu"""
 
         file_names = QtWidgets.QFileDialog.getOpenFileNames(self, 'Select files',
                     '/', "Sound files (*.wav *.mp3)")
@@ -258,10 +266,15 @@ class Ui_Soundboard(QWidget):
 
     def update_file_line(self, directory):
 
+        """Updates the file directory label to list the parent directory"""
+
         _translate = QtCore.QCoreApplication.translate
         self.file_line.setText(_translate("Soundboard", directory))
 
     def save_profile(self):
+
+        """Saves current selected buttons as a profile.
+           Files paths are saved to a json file for later retrieval"""
 
         confirm = QtWidgets.QMessageBox()
         confirm.setIcon(QtWidgets.QMessageBox.Question)
@@ -276,7 +289,7 @@ class Ui_Soundboard(QWidget):
             if profile_name != "":
                 new_profile_dic = OrderedDict(Name=profile_name, Files=[])
                 try:
-                    self.save_json_creation(new_profile_dic)
+                    self.save_json_profile(new_profile_dic)
                     self.load_profile_menu()
                 except AttributeError:
                     null_save_message = QtWidgets.QMessageBox()
@@ -285,8 +298,10 @@ class Ui_Soundboard(QWidget):
                     null_save_message.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     null_save_message.exec()
 
+    def save_json_profile(self, dic):
 
-    def save_json_creation(self, dic):
+        """Saves Profile to json file
+           Input: Dictionary containing button file names"""
 
         for k in self.sound_buttons.keys():
             files = str(Path("/".join([str(self.parent_path), self.sound_buttons[k].text()])))
@@ -297,6 +312,8 @@ class Ui_Soundboard(QWidget):
             json.dump(dic, json_file)
 
     def load_profile_menu(self):
+
+        """Loads all current profiles to Load Profile Menu"""
 
         os.chdir(self.config_path)
         for file in sorted(glob.glob('*.json')):
@@ -309,6 +326,10 @@ class Ui_Soundboard(QWidget):
 
     def load_profile(self, profile):
 
+        """Loads the buttons and signals for the files in the profile
+           Input: profile name"""
+
+        # Clears current buttons and selection menu
         for k in self.check_boxes.keys():
             self.check_boxes[k].setCheckState(QtCore.Qt.Unchecked)
         self.remove_button_signal()
@@ -317,8 +338,10 @@ class Ui_Soundboard(QWidget):
         with open(f'{profile}.json', 'r') as file:
             json_unpack = json.load(file)
 
-        selected_files = [ Path(file).parts[-1] for file in json_unpack['Files']]
+        # Builds a list of sound files from the json file
+        selected_files = [Path(file).parts[-1] for file in json_unpack['Files']]
 
+        # Updates the parent directory label
         try:
             self.parent_path = Path(json_unpack['Files'][0]).parent
             self.update_file_line(str(self.parent_path))
@@ -328,6 +351,7 @@ class Ui_Soundboard(QWidget):
         self.remove_all_list_items()
         self.list_layout.clear()
 
+        # Loads the selection menu
         self.load_selection_menu(selected_files)
 
         for k in self.check_boxes.keys():
